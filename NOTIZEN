@@ -1,0 +1,4 @@
+max_file_size und max_upload und so in php.ini einstellen (und bei apache2.conf), damit die uploads richtig funktionieren!
+Oder vorher via <input> Feld die Dateigröße "prüfen".
+
+When using single-page templates, you can prefetch pages into the DOM so that they're available instantly when the user visits them. To prefetch a page, add the data-prefetch attribute to a link that points to the page. jQuery Mobile then loads the target page in the background after the primary page has loaded and the pagecreate event has triggered.
