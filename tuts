@@ -1,0 +1,62 @@
+To copy an video frame to an image file involves properly loading the video, copying the image to a canvas and exporting it to a file. This is totally possible, but there are a few places where you can run into trouble, so let's take it one step at a time.
+
+1) Loading the video
+
+To capture the pixels, you need to load the video into a <video> tag, not an iframe or object or embed. And the file needs to come from a web server, which is the same one the web page itself is on (unless you use cross-origin headers, which is complicated and may not work in your browser. This is restricted by the browser for security reasons. Your code loads the video from the local file system, which won't work.
+
+You also need to load the right file format. IE9+ may play WMV, but it's unlikely that any other browser will. If you can, load up multiple sources, using webm, mp4 and ideally ogg/theora.
+
+var container = document.getElementById("myVid"),
+    video = document.createElement('video'),
+    canCapture = true;
+if (!video.canPlayType('video/wmv')) {
+    /* If you don't have multiple sources, you can load up a Flash fallback here
+       (like jPlayer), but you won't be able to capture frames */
+    canCapture = false;
+    return;
+}
+video.src = 'myvideo.wmv';
+container.appendChild(video);
+video.play(); //or put this in a button click handler if you want your own controls
+
+2) Next, create the canvas and a drawing context. You actually don't need to even attach it to the DOM, but you do need to set it to the size at which you want to save the resulting image. For this example, we'll assume you have a fixed dimension in mind, but if you want, you can set it to a multiple of the video size. Just make sure you run that inside a 'loadedmetadata' event on the video, because the video dimensions won't be available right away.
+
+var canvas = document.createElement('canvas');
+canvas.width = 640;
+canvas.height = 480;
+var ctx = canvas.getContext('2d');
+// if you want to preview the captured image,
+// attach the canvas to the DOM somewhere you can see it.
+
+3) Capture the image to the canvas and save it to a file. Put this code in an onclick event on a button or inside a timer - however you want to decided when the image gets captured. Use the drawImage method. ([This article] provides a good explanation, including the security concerns. It's the same for video as for an image.)
+
+//draw image to canvas. scale to target dimensions
+ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+//convert to desired file format
+var dataURI = canvas.toDataURL('image/png'); // can also use 'image/jpeg'
+
+### saving #####
+
+So you’ve finally discovered the wonder that is the HTML5 Canvas element. Great! If you’re like me, the first thing I wanted to do with it was doodle on it. I eventually worked out how to map touch/mouse events to the canvas and draw lines, but I wanted to save my creations!
+
+As it turns out, the Canvas element has a method called toDataURL(), which base64 encodes the entire Canvas element and returns it as a string. From there, you can just pump it over to a server and handle it from there. Here’s the step-by-step, which assumes you are also running jQuery on your site.
+Step 1: Save the canvas and POST the data
+
+var data = document.getElementById("myCanvasID").toDataURL();
+$.post("process.php", {
+	imageData : data
+}, function(data) {
+	window.location = data;
+});
+
+Step 2: Process the POST data, and save it to a file.
+
+$data = substr($_POST['imageData'], strpos($_POST['imageData'], ",") + 1);
+$decodedData = base64_decode($data);
+$fp = fopen("canvas.png", 'wb');
+fwrite($fp, $decodedData);
+fclose();
+echo "/canvas.png";
+
+Note: The first line of this script removes the header information that is sent with the encoded data.

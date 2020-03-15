@@ -1,0 +1,158 @@
+html, body {
+                width: 100%;
+                height:100%;
+                position: absolute;
+            }
+            
+            #Fotokram {
+                width: 50%;
+                height: 100%;
+                text-align: center;
+                position: relative;
+                margin-left: 25%;
+                margin-right: 25%;
+                background-color:;
+            }
+            #Fotokram>input {
+                height: 0em;
+                display: none;
+            }
+            #video {
+                border: 4px green solid;
+                height: 600px;
+                width: 800px;
+                display: inline-box;
+                z-index: 2;
+                position: relative;
+            }
+            #button_area {
+                list-style: none;
+                width: 100%;
+                text-align:center;
+                justify-content: center;
+                display: flex;
+            }
+            .buttons.neben{
+                bottom: 2em;
+                margin-top: 1.65em;
+                margin-left: 1em;
+                margin-right: 1em;
+                height: 3em;
+                width: 3em;
+                background: #432;
+                background-size: contain;
+                background-position: center;
+                border-radius: 50%;
+                border: 1px white solid;
+                border-style: dashed;
+                list-style: none;
+            }
+            .buttons{
+                margin-left: 1em;
+                margin-right: 1em;
+                width: 8vw !important; 
+                background: #432;
+                background-size: contain;
+                background-position: center;
+                border-radius: 50%;
+                border: 2px white solid;
+                border-style: solid;
+                list-style: none;
+                height: 8vw;
+                margin-left: 1.25vw;
+                margin-right: 1.25vw;
+            }
+            #btn_capture2 {
+                background-image: url("icon2.png");
+                background-color: #ffffff;
+                
+            }
+            #btn_liste {
+                background: rgba(16, 82, 240, 0.51);
+                
+            }
+            #btn_selectFiles {
+                background-image: url(icon_camera.svg);
+            }
+            #multipic_add {
+                background-color: #ffffff;
+                border: 1px black solid;
+            }
+            #float_stopper {
+                float:none;
+            }
+            #snap {
+                z-index: 3;
+                width: 15em;
+                height: 5em;
+                bottom: 5em;
+                right: 15em;
+                position:relative;
+            }
+            #canvas {
+                border: 3px #3333 solid;
+                border-radius: 2em;
+                max-height: 60%;
+                max-width: 80%;
+                display: flex;
+                z-index: 2;
+                position: relative;
+                margin: auto;
+                margin-top: 3.2em;
+            }
+            #canvas.inactive {
+                display:none;
+            }
+            .video_canvas_unsichtbar {
+                height:0px;
+            }
+            
+            #tags2 {
+                width: 50%;
+                margin-top: 1.65em;
+                text-align: center;
+                
+                border-radius: 4em;
+                
+                border-style: solid;
+                
+                font-family: helvetica;
+                
+                vertical-align: middle;
+                
+                line-height: 4em;
+                
+                height: 4em;
+                
+                display: none;
+                
+            }
+            
+            #Photogallerie {
+                width: 50%;
+                left: 50%;
+                margin-left: 25%;
+                bottom: 0px;
+                right: 3%;
+                margin-right: 25%;
+                height: 20%;
+                margin-top: 4em;
+            }
+                
+            
+            
+            #Photogallerie img{
+                float: left;
+                padding: 1em 1em;
+                /* margin: 20px 5px 15px 20px; */
+                width: 75px;
+                height: 75px;
+                background-color: #999999;
+            }
+            
+            #gallerie {
+                
+            }
+            
+            #gallerie img {
+            }

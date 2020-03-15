@@ -1,0 +1,15 @@
+Update the UI
+
+We dont want to refresh the page to see new items. More typically you would update the UI manually when you write data to it, however, in PouchDB you may be syncing data remotely, so you want to make sure you update whenever the remote data changes. To do this we will call db.changes which subscribes to updates to the database, wherever they come from. You can enter this code between the remoteCouch and addTodo declaration:
+
+var remoteCouch = false;
+
+db.changes({
+  since: 'now',
+  live: true
+}).on('change', showTodos);
+
+// We have to create a new todo document and enter it in the database
+function addTodo(text) {
+
+So every time an update happens to the database, we redraw the UI to show the new data. The live flag means this function will continue to run indefinitely. Now try entering a new todo and it should appear immediately.

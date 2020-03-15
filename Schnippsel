@@ -1,0 +1,45 @@
+As you already know, you can create either local PouchDBs:
+
+var localDB = new PouchDB('mylocaldb')
+
+or remote PouchDBs:
+
+var remoteDB = new PouchDB('http://localhost:5984/myremotedb')
+
+
+#####
+
+To perform unidirectional replication, you simply do:
+
+localDB.replicate.to(remoteDB).on('complete', function () {
+  // yay, we're done!
+}).on('error', function (err) {
+  // boo, something went wrong!
+});
+
+
+#####
+
+
+However, to make things easier for your poor tired fingers, PouchDB has a shortcut API:
+
+localDB.sync(remoteDB);
+
+
+#####
+
+
+You can allow PouchDB to automatically handle this error, and retry until the connection is re-established, by using the retry option:
+
+localDB.sync(remoteDB, {
+  live: true,
+  retry: true
+}).on('change', function (change) {
+  // yo, something changed!
+}).on('paused', function (info) {
+  // replication was paused, usually because of a lost connection
+}).on('active', function (info) {
+  // replication was resumed
+}).on('error', function (err) {
+  // totally unhandled error (shouldn't happen)
+});

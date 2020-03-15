@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="de-DE">
+	<head>
+	<meta charset="UTF-8" />
+        <script src="pouchdb-7.0.0.js"></script>
+        <script src="jquery-3.4.1.min.js"></script>
+        
+        <script>
+            /* Init PouchDB Datenbank */
+            // PouchDB.debug.enable('*'); //PouchDB.debug.disable();
+            var db_dinge = new PouchDB("Dinge");
+            db_dinge.info().then(function (info) {
+                console.log(info);
+            })
+            /* Init Seite */
+            function l(txt) {
+                console.log(txt);
+            }
+
+            
+        </script>
+        
+        <style>
+            html, body {
+                width: 100%;
+                height:100%;
+                position: absolute;
+            }
+            
+            #Fotokram {
+                width: 50%;
+                height: 100%;
+                text-align: center;
+                position: relative;
+                margin-left: 25%;
+                margin-right: 25%;
+                background-color: white;
+            }
+            #video {
+                border: 4px green solid;
+                height: 600px;
+                width: 800px;
+                display: inline-box;
+                z-index: 2;
+                position: relative;
+            }
+            #button_area {
+                list-style: none;
+                width: 100%;
+                height: 8vh; 
+                margin: auto;
+                margin-top: 50%;
+                text-align:center;
+                justify-content: center;
+                display: flex;
+            }
+            .buttons.neben{
+                bottom: 2em;
+                margin-top: 1.65em;
+                margin-left: 1em;
+                margin-right: 1em;
+                height: 3em;
+                width: 3em;
+                background: #432;
+                background-size: contain;
+                background-position: center;
+                border-radius: 50%;
+                border: 1px white solid;
+                border-style: dashed;
+                list-style: none;
+            }
+            .buttons{
+                margin-left: 1em;
+                margin-right: 1em;
+                width: 8vw;
+                background: #432;
+                background-size: contain;
+                background-position: center;
+                border-radius: 50%;
+                border: 2px white solid;
+                border-style: solid;
+                list-style: none;
+                height: 8vw;
+                margin-left: 1.25vw;
+                margin-right: 1.25vw;
+            }
+            #btn_capture2 {
+                background-image: url("icon2.png");
+                background-color: #ffffff;
+                
+            }
+            #btn_liste {
+                background: rgba(16, 82, 240, 0.51);
+                
+            }
+            #btn_selectFiles {
+                background-image: url(icon_camera.svg);
+            }
+            #multipic_add {
+                background-color: #ffffff;
+                border: 1px black solid;
+            }
+            #float_stopper {
+                float:none;
+            }
+            #snap {
+                z-index: 3;
+                width: 15em;
+                height: 5em;
+                bottom: 5em;
+                right: 15em;
+                position:relative;
+            }
+            #canvas {
+                border: 3px #3333 solid;
+                border-radius: 2em;
+                max-height: 60%;
+                max-width: 80%;
+                display: flex;
+                z-index: 2;
+                position: relative;
+                margin: auto;
+                margin-top: 3.2em;
+            }
+            #canvas.inactive {
+                display:none;
+            }
+            .video_canvas_unsichtbar {
+                height:0px;
+            }
+            
+            #tags2 {
+                width: 50%;
+                margin-top: 1.65em;
+                text-align: center;
+                
+                border-radius: 4em;
+                
+                border-style: solid;
+                
+                font-family: helvetica;
+                
+                vertical-align: middle;
+                
+                line-height: 4em;
+                
+                height: 4em;
+                
+                display: none;
+                
+            }
+            
+            #Photogallerie {
+                width: 50%;
+                left: 50%;
+                margin-left: 25%;
+                bottom: 0px;
+                right: 3%;
+                margin-right: 25%;
+                height: 20%;
+                margin-top: 4em;
+                display: none;
+            }
+                
+            
+            
+            #Photogallerie img{
+                float: left;
+                padding: 1em 1em;
+                /* margin: 20px 5px 15px 20px; */
+                width: 75px;
+                height: 75px;
+                background-color: #999999;
+            }
+            
+            #gallerie {
+                
+            }
+            
+            #gallerie img {
+            }
+            
+        </style>
+    </head>
+    <body>
+        
+        <!--
+        	Ideally these elements aren't created until it's confirmed that the 
+        	client supports video/camera, but for the sake of illustrating the 
+        	elements involved, they are created with markup (not JavaScript)
+        -->
+        
+        <div id="button_area">
+                <button class="buttons" id="btn_capture2" onclick='document.getElementById("file-input").click();'>&nbsp;</button>
+                <button class="buttons" id="btn_liste">G</button>
+                <button class="buttons" id="btn_selectFiles" onclick='document.getElementById("file-input_upload").click();'></button>
+                <button class="buttons" id="multipic_add" onclick='document.getElementById("input_multi").click();'>+</button>
+        </div>
+        
+        
+        <div id="Fotokram">
+            
+        <!-- 
+        --   Page Setup.
+        --   Die Szene wird in <video> dargestellt, und bei Klick auf <snap> "fotografiert" und als Bild in <canvas> dargestellt 
+        -->
+        
+            
+            <!-- <input type="file" accept="image/*"> -->
+            <input type="file" accept="image/*" id="file-input_upload" hidden>
+            <input type="file" accept="image/*" id="file-input" capture hidden >
+            <input type="file" accept="image/*" id="file-input_multi" hidden>
+            
+            
+            <canvas id="canvas" class="inactive"></canvas>
+            <textarea id="tags2" placeholder="#Bezeichnung und Tags"></textarea>
+            
+        </div>
+        
+        <div id="Photogallerie"></div>
+        
+        <!-- Scripte -->
+        <script>
+        var fileListe = 0;
+          var canvas = document.getElementById('canvas');
+        
+          function doSomethingWithFiles(fileList) {
+            let file = null;
+            for (let i = 0; i < fileList.length; i++) {
+              if (fileList[i].type.match(/^image\//)) {
+                file = fileList[i];
+                break;
+              }
+            }
+        
+            if (file !== null) {
+                srcURL = URL.createObjectURL(file);
+                console.log(srcURL);
+                
+                // Styling
+                canvas.width = canvas.style.width || 800;
+                canvas.height = canvas.style.height || 600;
+                
+                var context = canvas.getContext('2d');
+                var reader = new FileReader();
+            
+                reader.onload = function(e) {
+                    var contents = reader.result;
+                    canvas.loadFromJSON(JSON.parse(contents), function() {
+                        canvas.renderAll();
+                    });
+                };
+            }
+          }
+        </script>
+        
+        <script>
+        
+        /* mehrere Alternativen, das erzeugte Bild anzuzeigen, oder upzuloaden
+        // - drawOnCanvas
+        // - neues <img> Objekt
+        // (- Upload via Form)
+        // - Upload via Script
+        // - in Datenbank packen (und synchronisieren lassen) *choice!
+        */
+        
+            // Listener für Change im <input> Element ("Bild aufgenommen")    
+            // was passiert mit dem/den aufgenommenen oder ausgewählten Bildern?
+            const fileInput = document.getElementById('file-input');
+            var txt = "";
+            fileInput.addEventListener('change', function (e) {
+                    console.log(e);
+                    
+                    var file = e.target.files[0]; // das Bild; und damit wird jetzt was gemacht
+                    console.log(file);
+                    console.log("url:"+URL.createObjectURL(file));
+                    
+                    // upload(file); // oder
+                    //$("#canvas").stop().show(0);
+                    $("#button_area").css("margin-top","5%");
+                    $(".buttons").addClass("neben");
+                    drawOnCanvas(file); //oder
+                    displayAsImage(file, document.getElementById("Photogallerie")); // Bild in die Gallery 
+                    uploadViaXHR(file); // Bild auf den Server laden
+                    let bildObjekt = add_picture_to_PouchDB(file,$("#tags2")[0].value);
+                    Photo_in_Datenbank(bildObjekt);
+                    $("#tags2").stop().show(0);
+                    $("#tags2")[0].value = "";
+                   // Bilderholen();
+                }
+            );
+                
+        
+            function drawOnCanvas(file) {
+              var reader = new FileReader();
+                $("#canvas").removeClass("inactive");
+              reader.onload = function (e) {
+                var dataURL = e.target.result,
+                    c = document.querySelector('canvas'),
+                    ctx = c.getContext('2d'),
+                    img = new Image();
+            
+                img.onload = function() {
+                  c.width = img.width;
+                  c.height = img.height;
+                  ctx.drawImage(img, 0, 0);
+                };
+            
+                img.src = dataURL;
+              };
+            
+              reader.readAsDataURL(file);
+            }
+        
+        
+            function displayAsImage(file, parentObjekt) {
+                // hängt das Bild als neues <img> Element an das übergebene parentObject, oder document.body an
+              var imgURL = URL.createObjectURL(file),
+                  img = document.createElement('img');
+            
+              img.onload = function() {
+                URL.revokeObjectURL(imgURL);
+              };
+            
+              img.src = imgURL;
+              if (parentObjekt) {
+                parentObjekt.appendChild(img);
+              } else {
+                document.body.appendChild(img);
+              }
+            }
+            
+            
+            
+            function uploadViaXHR(file) {
+              var form = new FormData(), xhr = new XMLHttpRequest();
+            
+              form.append('imageData[]', file);
+              xhr.open('post', 'process.1.php', true);
+              xhr.send(form);
+            }
+            
+            function server_log(txt) { // evtl. mal für's Delevopment hilfreich.
+                document.getElementById("Photogallerie").innerHTML = txt;
+                var form = new FormData();
+                
+                form.append('logDaten[]', txt);
+                var xhr = new XMLHttpRequest();
+                xhr.open("post", "process.1.php", true);
+                xhr.send(form);
+            }
+            
+            
+            function add_picture_to_PouchDB (img_file_objekt, tags) {
+                // neu aufgenommene Bilder, bzw. deren Blobs werden mitsamt Metadaten als neues Document zur Datenbank hinzugefügt
+                //console.log("add_picture.. :");
+                //console.log(img_file_objekt);
+                var imgdaten;
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    // Wird ausgeführt, wenn der FileReader durch die Datei ist.
+                    
+                    imgdaten64 = e.target.result.substr(e.target.result.indexOf(",") + 1); // Die ersten Zeichen, "data:image/jpeg;base64".. kommen weg.
+                    //console.log(e);
+                    
+                    // Datenbankeintrag vorbereiten
+                    try {
+                        var obj = {
+                            _id: Date.now()+"", // Wie geht richtige String-Konversion nochmal?
+                            ort: "",
+                            tags: tags,
+                            _attachments: {
+                                'bild': {
+                                    content_type: img_file_objekt.type,
+                                    data: img_file_objekt
+                                }
+                            }
+                        }
+                    console.log ("imgobjekt erstellt: ", obj); l("ja");
+                    }
+                    catch (err) {
+                        l(err + " beim Erstellen eines neuen imgobjekts");
+                        return;
+                    }
+                    
+                    // Datenbankeintrag eintragen
+                    Photo_in_Datenbank(obj);
+                } ;
+                reader.readAsDataURL(img_file_objekt);
+                console.log(reader.result);
+                
+                return true;
+            }
+            
+            
+        </script>
+        <script>
+         
+            
+            // Gallerie anzeigen
+            document.getElementById("btn_liste").addEventListener("click", function() {
+                $("#Photogallerie").show();
+            	Bilderholen();
+            });
+            
+            
+            /* _alt_
+            function erstelle_photo_objekt(srcURI, tags) {
+                // erstelle ein neues imgobject mit allen Attributen
+                try {
+                    var obj = {
+                        _id: Date.now()+"",
+                        ort: "",
+                        srcURI: srcURI,
+                        tags: tags || [] //läuft das so?
+                    }
+                    l ("imgobject erstellt: ", obj)
+                }
+                catch (err) {
+                    l(err + " beim Erstellen eines neuen imgobjects");
+                    return;
+                }
+                return obj;
+            }
+            */
+            
+            function Photo_in_Datenbank (imgobjekt) {
+                // Fügt neuen Datenbankeintrag ein.
+                db_dinge.put(imgobjekt).then(function (doc) {
+                    console.log("Photo in DB einfügen:");
+                    console.log(doc.ok == true ? "geklappt" : "Fehler",doc.id);
+                })
+               .catch (function(err) {
+                    l (err);
+                });
+            }
+            
+            function Bilderholen() {
+                db_dinge.allDocs({include_docs: true, descending: true, attachments: true, binary: true}, function(err, doc) { // attachments ist wichtig, um die auch mitgeliefert zu bekommen
+                    console.log("Geholtes doc: ",doc);
+                    Bilderanzeigen(doc.rows);
+                });
+            }
+            
+            function Bilderanzeigen(rows) {
+                
+                /*
+                var obj = {
+                            _id: Date.now()+"", // Wie geht richtige String-Konversion nochmal?
+                            ort: "",
+                            tags: tags,
+                            _attachments: {
+                                'bild': {
+                                    content_type: img_file_objekt.type,
+                                    data: img_file_objekt
+                                }
+                            }
+                */
+                
+                
+                
+                if (typeof(rows) == "nothing") {
+                    console.log(typeof(rows));
+                    return false;
+                } else {
+                    console.log(rows[0] + "kein Fehler");
+                    // TODO: besser dynamisch machen...
+                    $("#Photogallerie")[0].innerHTML = "";
+                    Bildelemente = [];
+                    rows.forEach(function(r) {
+                        let tags = r.doc.tags;
+                        let key = r.doc._id;
+                        console.log(tags);
+                        if (r.doc._attachments.bild) {
+                            var BildSrcURL = URL.createObjectURL(r.doc._attachments.bild.data);
+                            gallery_add_pic (BildSrcURL,key,tags);
+                        }
+                        console.log("Bild angefügt: ", BildSrcURL);
+                    }
+                    );
+                    //document.getElementById("Photogallerie").innerHTML = Bildelemente.join("");
+                    return rows.length;
+                }
+            }
+            
+            /* für später: Datenbanksynchronisation
+            //
+            const sync = localDB.sync(remoteDB, {
+              live: true,
+              retry: true
+            });
+            */
+            
+            function gallery_add_pic (bildURL,key,tags) {
+                // ein weiteres Bild in die Gallerie einfügen
+                var img = document.createElement('img');
+                img.src = bildURL;
+                img.onload = function() {
+                    window.URL.revokeObjectURL(this.src);
+                }
+                
+                // Tags dazu
+                $(img).attr("data-tags",tags);
+                $(img).attr("data-key",key);
+                document.getElementById("Photogallerie").appendChild(img);
+                
+                
+                
+            }
+            
+            function reset_ALLES () {
+                db_dinge.destroy().then(function () {
+                  // database destroyed
+                }).catch(function (err) {
+                  // error occurred
+            })
+            }
+            
+        </script>
+            
+            
+    </body>
+</html>
